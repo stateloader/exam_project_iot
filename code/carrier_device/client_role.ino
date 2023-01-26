@@ -2,9 +2,9 @@
 
 // Client Role
 
-// Reads data from a remote server/node and stores it in RCT memory before going to bed. I've
-// written this module using Arduino's BLE client example as inspiration, written by "Unknown"
-// and updated by "chegewara".
+// Reads data from a remote server and stores it in RTC memory before going to bed. I've
+// written this module using Arduino's BLE client example as inspiration, itself written
+// by "Unknown" and updated by "chegewara".
 
 BLEUUID REMOTE_SERVICE_UUID(SOURCE_SERVICE_UUID);
 BLEUUID REMOTE_RESOURCE_UUID(SOURCE_RESOURCE_UUID);
@@ -21,15 +21,8 @@ static uint64_t client_stamp = 0;
 
 static bool advertised = false;
 
-static void client_setup() {
-
-  Serial.begin(BAUDRATE);
-  pinMode(CLIENT_PIN, OUTPUT);
-  digitalWrite(CLIENT_PIN, 1);
-}
-
 class Advertised_Callback: public BLEAdvertisedDeviceCallbacks {
-//Callback class invoked if the scanner (in func 'client_state_scan') finds the Sensor Device.
+//Callback class invoked if the scanner (in func 'client_state_scan') finds Sensor Device.
 
   void onResult(BLEAdvertisedDevice advertisedDevice) {
 
@@ -42,26 +35,26 @@ class Advertised_Callback: public BLEAdvertisedDeviceCallbacks {
 };
 
 static void client_state_scan(void) {
-//Client being created and scans the surroundings for 'SOURCE_SERVER_NAME', a remote server
-//which transmits the data I want to relay.
+//Create Client and scans the surroundings for 'SOURCE_SERVER_NAME', a remote server which
+//transmits the data I want to relay.
 
-  BLEDevice::init(SUPPLY_CLIENT_NAME);
+  BLEDevice::init(DEVICE_CLIENT_NAME);
   BLEScan* scan_server = BLEDevice::getScan();
   scan_server->setAdvertisedDeviceCallbacks(new Advertised_Callback());
   scan_server->setActiveScan(true);
   scan_server->start(10);
 
   if (advertised) {
-    Serial.println("client succ - desired server device found.");
+    Serial.println("client scan - desired server device found.");
     client_state = CLIENT_STATE_CONN;
     client_attmp = 0;
  
   } else if (client_attmp == 60) {
-    Serial.println("client error - failed to find server.");
+    Serial.println("client scan - FAILURE; all scan attempts.");
     client_state = CLIENT_ERROR_MODE;
  
   } else {
-    Serial.print("client fail - find server, attempt ");
+    Serial.print("client scan - FAILURE; finding server. Attempt: ");
     Serial.print(client_attmp);
     Serial.println(" of 60.");
     client_attmp += 1;
@@ -69,7 +62,7 @@ static void client_state_scan(void) {
 }
 
 static uint8_t client_state_conn_check_service(void) {
-//Checks if the remote server provides the desired service. If so, assign it.
+//Check if the remote server provides the desired service. If so, assign it.
   
   remote_service = client->getService(REMOTE_SERVICE_UUID);
   if (!remote_service) {
@@ -80,7 +73,7 @@ static uint8_t client_state_conn_check_service(void) {
 }
 
 static uint8_t client_state_conn_check_reading(void) {
-//Checks if the remote server provides desired resource. If so, assign it.
+//Check if the remote server provides desired resource. If so, assign it.
 
   remote_resource = remote_service->getCharacteristic(REMOTE_RESOURCE_UUID);
   if (!remote_resource) {
@@ -91,7 +84,7 @@ static uint8_t client_state_conn_check_reading(void) {
 }
 
 static void client_state_conn(void) {
-//Creates and connects/pairing the device to the remote server.
+//Create and connect to remote device (Sensor Device or another Carrier Device).
   
   client = BLEDevice::createClient();
   client->connect(*remote_address);
@@ -101,83 +94,57 @@ static void client_state_conn(void) {
   check_sercha += client_state_conn_check_reading();
 
   if (check_sercha == 2 && client->isConnected()) {
-    Serial.println("client succ - connection established.");
+    Serial.println("client conn - established.");
     client_state = CLIENT_STATE_READ;
     client_attmp = 0;
     client_stamp = micros();
  
   } else if (client_attmp == 60) {
-    Serial.println("client error - failed to establish connection.");
+    Serial.println("client conn - FAILURE; all connection attempts.");
     client_state = CLIENT_ERROR_MODE;  
   
   } else {
-    Serial.print("client fail - establishing connection, attempt ");
+    Serial.print("client conn - FAILURE; establishing connection, attempt: ");
     Serial.print(client_attmp);
     Serial.println(" of 60.");
     client_attmp += 1;
   }
 }
 
-static void client_state_read_check_string(void) {
-//Reads the characteristic value, i.e: data provided from the remote server. If its empty,
-//larger than 8 chars or consist of anything else than numbers (and a terminator) it won't
-//be stored.
-
-  std::string value = remote_resource->readValue();
-
-  if (value.empty()) {
-    return;
-  } else if (value.length() > 7) {
-    return;
-  } for (uint8_t i = 0; value.c_str()[i] == '\0'; i++) {
-    if (!check_numb(value.c_str()[i])) return;
-  }
-  uint16_t check_value = (uint16_t) atoi(value.c_str());
-  if (check_value < 1) return;
-  
-  RTC_supply_data = check_value;
-  Serial.print("client succ - data received: ");
-  Serial.print(RTC_supply_data);
-  Serial.print(".\n");
-}
-
 static void client_state_read(void) {
-//Checks if we're still connected or a second has passed since last reading before a new
-//sample being picked.
+//Check if we're still connected or a second has passed since last reading.
 
-  if (!client->isConnected()) {
-    client_state = CLIENT_SLEEP_MODE;
-    return;
-  } else if (!supply_timer(client_stamp, uSSEC)) {
-    return;
-  } else {
-    client_state_read_check_string();
-    client_stamp = micros();
-  }
+  float value = remote_resource->readFloat();
+
+  if (!value) return;
+  Serial.print("client read - resource fetched, value: ");
+  Serial.print(value);
+  Serial.print(".\n");
+
+  RTC_carrier_data = value;
+  client->disconnect();
+  client_state = CLIENT_SLEEP_MODE;  
 }
 
 static void client_sleep_mode(void) {
-//Client going into deep sleep after SERVER_ROLE has been assigned.
+//Client going into deep sleep after SERVER_ROLE variable has been assigned.
   
-  RTC_supply_role = SERVER_ROLE;  
+  RTC_carrier_role = SERVER_ROLE;  
   esp_sleep_enable_timer_wakeup(SLEEP_TIMER_CLIENT);
   esp_deep_sleep_start();
 }
 
 static void client_error_mode(void) {
-//X_X
+//Error occured during client duty.
 
-  Serial.println("Client Mayday!");
-  RTC_supply_role = BROKEN_ROLE;  
-  esp_sleep_enable_timer_wakeup(uSSEC);
-  esp_deep_sleep_start();
+  RTC_carrier_role = BROKEN_ROLE;
+  broken_routine();
 }
 
 void client_routine(void) {
-//Client SM.
+//Statemachine Client Role.
 
-  client_setup();
-
+  Serial.println("\nSupply Client Setup\n");
   while (1) {
 
     switch (client_state) {
@@ -205,5 +172,3 @@ void client_routine(void) {
     }
   }
 }
-
-

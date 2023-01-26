@@ -1,0 +1,15 @@
+{
+    "import_stamp": "26-01-2023 20:42:27",
+    "device_name": "central_jacke",
+    "device_UUID": "13b6f0ed-fbc2-467d-b108-e81a49bdd362",
+    "sensor_name": "sensor_device",
+    "sensor_regn": "stockholm",
+    "sensor_munp": "solna_stad",
+    "sensor_dist": "frosunda",
+    "sensor_mesh": "mesh_13",
+    "sensor_vess": "vessel_1",
+    "vessel_value": 18,
+    "vessel_state": 2,
+    "vessel_event": 1,
+    "vessel_alarm": 0
+}
