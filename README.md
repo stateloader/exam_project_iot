@@ -21,7 +21,7 @@ copy/pasting configs-files while flashing my devices back and forward during tes
 To create UUID:s I've just used this generator https://www.uuidgenerator.net/version1
 
 -----------------------------------------------------------------------------------------
-# SENSOR DEVICE   "sensor_device"   (ESP32 Devkit LiPo)             LOCAL ENDPOINT SERVER
+SENSOR DEVICE   "sensor_device"   (ESP32 Devkit LiPo)             LOCAL ENDPOINT SERVER
 -----------------------------------------------------------------------------------------
 
 #define SENSOR_SERVER_NAME   "sensor_device"
@@ -29,7 +29,7 @@ To create UUID:s I've just used this generator https://www.uuidgenerator.net/ver
 #define SENSOR_RESOURCE_UUID "a196c782-8aa4-11ed-a1eb-0242ac120002"
 
 -----------------------------------------------------------------------------------------
-# CARRIER DEVICE                    (ESP32 Devkit LiPo)                   CARRIER FLOOR 1
+CARRIER DEVICE                    (ESP32 Devkit LiPo)                   CARRIER FLOOR 1
 -----------------------------------------------------------------------------------------
 
 #define SOURCE_SERVER_NAME   "sensor_device"
@@ -43,7 +43,7 @@ To create UUID:s I've just used this generator https://www.uuidgenerator.net/ver
 #define TARGET_RESOURCE_UUID "94cdef66-8d11-11ed-a1eb-0242ac120002"
 
 -----------------------------------------------------------------------------------------
-# CARRIER DEVICE                    (ESP32 Devkit LiPo)                   CARRIER FLOOR 3
+CARRIER DEVICE                    (ESP32 Devkit LiPo)                   CARRIER FLOOR 3
 -----------------------------------------------------------------------------------------
 
 #define SOURCE_SERVER_NAME   "floor1_server" MAC 8C:4B:14:82:FE:22
@@ -57,7 +57,7 @@ To create UUID:s I've just used this generator https://www.uuidgenerator.net/ver
 #define TARGET_RESOURCE_UUID "4cd1a9fe-8f97-11ed-a1eb-0242ac120002"
 
 -----------------------------------------------------------------------------------------
-# CENTRAL DEVICE    "central_jacke"  (RaspberryPi)                  LOCAL ENDPOINT CLIENT
+CENTRAL DEVICE    "central_jacke"  (RaspberryPi)                  LOCAL ENDPOINT CLIENT
 -----------------------------------------------------------------------------------------
 
 #define SOURCE_SERVER_NAME   "floor3_server" MAC 7C:9E:BD:B3:F9:36
