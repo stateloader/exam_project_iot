@@ -12,7 +12,7 @@ Better documentation in the pipe.
 
 ![carrier](https://user-images.githubusercontent.com/78800629/214961889-4c9483b0-3714-43b1-b33f-391fbc8b9caa.jpg)
 
-###Node configs
+### Node configs
 
 Config data regarding the 4 'nodes' at play within the context of "Aktivt Sophantering IoT".
 Besides providing a better view over thetopology, it's been quite handy to use for
